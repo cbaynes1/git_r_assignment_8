@@ -1,0 +1,238 @@
+---
+title: "CSDE 502 Winter 2021, Assignment 8"
+author: "Colin Baynes (cbaynes@uw.edu)"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    fig_cap: yes
+    keep_tex: yes
+  bookdown::html_document2:
+    number_sections: yes
+    self_contained: yes
+    code_folding: hide
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+urlcolor: blue
+---
+
+```{r}
+library(captioner)
+
+figure_nums <- captioner(prefix = "Figure")
+table_nums <- captioner(prefix = "Table")
+```
+
+___Explanation___:
+This assignment is intended to give you more practice in manipulating variables. 
+
+___Instructions___: 
+
+1. Make sure your Rmd file has no local file system dependencies (i.e., anyone should be able to recreate the output HTML using only the Rmd source file).
+1. Make a copy of this Rmd file and add answers below each question. The code that generated the answers should be included, as well as the complete source code for the document.
+1. Change the YAML header above to identify yourself and include contact information.
+1. For any tables or figures, include captions and cross-references and any other document automation methods as necessary.
+1. Make sure your output HTML file looks appealing to the reader.
+1. Upload the final Rmd to your github repository.
+1. Download [`assn_08_id.txt`](http://staff.washington.edu/phurvitz/csde502_winter_2021/assignments/assn_08_id.txt) and include the URL to your Rmd file on github.com.
+1. Create a zip file from your copy of `assn_08_id.txt` and upload the zip file to the Canvas site for Assignment 8. ___The zip file should contain only the text file. Do not include any additional files in the zip file--everything should be able to run from the file you uploaded to github.com. Use zip format and not 7z or any other compression/archive format.___
+
+
+#
+Imagine a new variable: multirace, using the following value definitions:
+
+	1 = one race, White
+	2 = one race, not White
+	3 = two races, includes White
+	4 = two races, both non-White
+	5 = three or more races, includes White
+	6 = three or more races, all non-White
+	9 = any race missing (White, Black/African American, American Indian, Asian, other)
+
+
+## 
+__Fill in the codes for the hypothetical cases below (`r table_nums(name = "t01", display = "cite")`).__
+
+`r table_nums(name = "t01", caption = "A hypothetical data set")`
+
+| white| black| AI| asian| raceother|multirace |
+|-----:|-----:|--:|-----:|---------:|---------:|
+|     1|     0|  0|     0|         0|    1     |
+|     0|     1|  0|     0|         0|    2     |
+|     1|     0|  0|     1|         0|    3     |
+|     0|     1|  1|     0|         0|    4     |
+|     1|     1|  0|     1|         0|    5     |
+|     0|     1|  0|     0|         1|    4     |
+|     0|     1|  1|     0|         1|    6     |
+|     1|     0|  1|     0|         0|    3     |
+|     1|     1|  1|     0|         1|    5     |
+|     6|     1|  8|     1|         6|    9     |	
+
+
+## 
+__Using this data frame (code below), report how many cases checked more than one race.__ Use R code to make this calculation and use inline expressions.
+
+```{r}
+dat <- 
+structure(
+    list(
+        white = c(1L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 1L, 6L),
+        black = c(0L, 1L, 0L, 1L, 1L, 1L, 1L, 0L, 1L, 1L), 
+        AI = c(0L, 0L, 0L, 1L, 0L, 0L, 1L, 1L, 1L, 8L), 
+        asian = c(0L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 1L), 
+        raceother = c(0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 1L, 6L), 
+        multirace = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+    ), 
+    class = "data.frame", 
+    row.names = c(NA, -10L)
+)
+dat.i <- subset(dat, select = -c(multirace))
+rowSums(dat.i)
+```
+Seven cases checked more than one race.
+
+##
+__Write R code to create the multirace variable, using the data set [AHwave1_v3.rds](http://staff.washington.edu/phurvitz/csde502_winter_2021/data/AHwave1_v3.rds).__ _Hint: You may want to create another variable, numrace, that counts the number of races._ Use [`download_file()`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/download.file.html) and `Sys.getenv("TEMP")` to download the file to your system's `TEMP` directory to avoid local file system dependencies.
+```{r}
+tmpdir <- Sys.getenv("TEMP")
+write.csv(x = AHwave1_v3, file = file.path(tmpdir, "AHwave1_v3.csv"), row.names = FALSE)
+saveRDS(object = AHwave1_v3, file = file.path(tmpdir, "AHwave1_v3.RDS"))
+```
+```{r, include=F}
+AHwave1_v3_rds <- readRDS(file = file.path(tmpdir, "AHwave1_v3.RDS"))
+AHwave1_v3_rds$multirace <- NA
+attach(AHwave1_v3_rds)
+```
+```{r}
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==1 & AHwave1_v3_rds$black==0 & AHwave1_v3_rds$AI==0 & AHwave1_v3_rds$asian==0 & AHwave1_v3_rds$raceother==0]<-"(1) one race, White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==1 | AHwave1_v3_rds$AI==1 | AHwave1_v3_rds$asian==1 | AHwave1_v3_rds$raceother==1]<-"(2) one race, not White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==1 & AHwave1_v3_rds$black==1 | AHwave1_v3_rds$AI==1 | AHwave1_v3_rds$asian==1 | AHwave1_v3_rds$raceother==1]<-"(3) two races, includes White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==1 & AHwave1_v3_rds$AI==1 | AHwave1_v3_rds$asian==1 | AHwave1_v3_rds$raceother==1]<-"(4) two races, both non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==0 & AHwave1_v3_rds$AI==1 & AHwave1_v3_rds$asian==1 | AHwave1_v3_rds$raceother==1]<-"(4) two races, both non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==0 & AHwave1_v3_rds$AI==0 & AHwave1_v3_rds$asian==1 & AHwave1_v3_rds$raceother==1]<-"(4) two races, both non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==1 & AHwave1_v3_rds$black==1 & AHwave1_v3_rds$AI==1 | AHwave1_v3_rds$asian==1 | AHwave1_v3_rds$raceother==1]<-"(5) three or more races, includes White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==1 & AHwave1_v3_rds$black==0 & AHwave1_v3_rds$AI==1 & AHwave1_v3_rds$asian==1 | AHwave1_v3_rds$raceother==1]<-"(5) three or more races, includes White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==1 & AHwave1_v3_rds$black==0 & AHwave1_v3_rds$AI==0 & AHwave1_v3_rds$asian==1 & AHwave1_v3_rds$raceother==1]<-"(5) three or more races, includes White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==1 & AHwave1_v3_rds$AI==1 & AHwave1_v3_rds$asian==1 & AHwave1_v3_rds$raceother==0]<-"(6) three or more races, all non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==1 & AHwave1_v3_rds$AI==0 & AHwave1_v3_rds$asian==1 & AHwave1_v3_rds$raceother==1]<-"(6) three or more races, all non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==1 & AHwave1_v3_rds$AI==1 & AHwave1_v3_rds$asian==0 & AHwave1_v3_rds$raceother==1]<-"(6) three or more races, all non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white==0 & AHwave1_v3_rds$black==0 & AHwave1_v3_rds$AI==1 & AHwave1_v3_rds$asian==1 & AHwave1_v3_rds$raceother==1]<-"(6) three or more races, all non-White"
+AHwave1_v3_rds$multirace[AHwave1_v3_rds$white>5 | AHwave1_v3_rds$black>5 | AHwave1_v3_rds$AI>5 | AHwave1_v3_rds$asian>5 | AHwave1_v3_rds$raceother>5]<-"(9) Race information missing"
+AHwave1_v3_rds$multirace<-as.factor(AHwave1_v3_rds$multirace)
+table(AHwave1_v3_rds$multirace)
+```
+## 
+__Label the multirace variable as well as its values using attribute labels.__.
+```{r}
+#creating brief label attribute for the data frame that says what the subsetted data frame is:
+attributes(AHwave1_v3_rds$multirace)$label <- "Add Health Wave 3 Race Caterogization"
+attributes(AHwave1_v3_rds$multirace)
+```
+## 
+__Include below a contingency table of the multirace variable. Make sure that the values are labelled so the table is readable, and also include any missing values.__
+```{r, include =F}
+#install.packages("captioner")
+library(captioner)
+table_nums <- captioner(prefix = "Table")
+figure_nums <- captioner(prefix = "Figure")
+# for having DIV tags
+knitr::knit_hooks$set(class = function(before, options, envir) {
+  if(before){
+    sprintf("<div class = '%s'>", options$class)
+  }else{
+    "</div>"
+  }
+})
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+See `r table_nums(name = "tcap0", display = "cite")`
+
+_`r table_nums(name = "tcap0", caption = "Add Health Wave 3 - Participants' Racial Classification")`_
+```{r}
+#Frequency tables
+library(kableExtra)
+race_tab <-
+  AHwave1_v3_rds %>% 
+    group_by(multirace) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Participants' Racial Classification") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+race_tab
+```
+
+# 
+__Review part B of each of the answers (i.e., `H1KQ1B .. H1KQ10B`) to the Knowledge Quiz (Section 19 of the Add Health questionnaire, documented in `INH19PUB.PDF`). The 10 questions each ask: â€œHow confident are you that your answer is correct?â€__
+
+## 
+__Write R code that creates a single summary variable named `kqconfidence`, with a larger number representing the respondent being more confident across all questions (scale of 0 to 3 for each individual question; `kqconfidence` will be the sum for each subject across the 10 questions). Note that any observations with value 7 (i.e., age less than 15) should be removed from the data frame, and values 6, 8, and 9 should be coded as `NA` (i.e., missing) for the purposes of scoring confidence. Document your code so that the reader knows how you scored the scale and how you handled missing values. Make sure to label the new variable.__
+```{r, include=F}
+AHwave1_v3_rds_subs <- subset(AHwave1_v3_rds, select = c(aid, h1kq1b, h1kq2b, h1kq3b, h1kq4b, h1kq5b, h1kq6b, h1kq7b, h1kq8b, h1kq9b, h1kq10b))#subsetting the larger data set to work with one that is a more manageable size
+AHwave1_v3_rds_subs$drop[AHwave1_v3_rds_subs$h1kq1b==7 | AHwave1_v3_rds_subs$h1kq2b==7 | AHwave1_v3_rds_subs$h1kq3b==7 | AHwave1_v3_rds_subs$h1kq4b==7 | AHwave1_v3_rds_subs$h1kq5b==7 | AHwave1_v3_rds_subs$h1kq6b==7| AHwave1_v3_rds_subs$h1kq7b==7| AHwave1_v3_rds_subs$h1kq8b==7| AHwave1_v3_rds_subs$h1kq9b==7| AHwave1_v3_rds_subs$h1kq10b==7]<-1 # identifying all observations where respondents are too young
+AHwave1_v3_rds_subs$drop[is.na(AHwave1_v3_rds_subs$drop)]<-0 # coding so as to facilitate their removal from the df
+table(AHwave1_v3_rds_subs$drop)
+
+dat.age <- subset(AHwave1_v3_rds_subs, drop==0) # creating a data frame with observation of young persons dropped
+dat.age[dat.age>=6]<-NA # recoding values of 6, 8, 9 as NA
+dat.age <- subset(dat.age, select = -c(drop))
+library(magrittr)
+dat.age %<>% # recoding the remaining variables and hteir values so that the respondents rating of their confidence conforms to the instructions
+  mutate_at(.vars = vars(matches("h1kq.*b*")),
+            funs(
+              case_when(
+                .== 4 ~ 1,
+                .== 3 ~ 2,
+                .== 2 ~ 3,
+                .== 1 ~ 4,
+                TRUE ~ as.numeric(.)
+              )
+            ))
+dat.age.no.aid <- subset(dat.age, select = -c(aid))
+dat.age.no.aid$confidence.sum <- rowSums(dat.age.no.aid, na.rm = TRUE)
+aux <- dat.age.no.aid %>% group_by(confidence.sum) %>% mutate(count=n())
+dat.age.no.aid$num.obs <- aux$count
+dat.age.no.aid$kqconfidence <- dat.age.no.aid$confidence.sum/10
+attributes(dat.age.no.aid$kqconfidence)$label <- "Add Health Wave 3 Knowledge confidence"
+```
+## 
+__Create and include below a contingency table from `kqconfidence` with raw counts, percentages, and cumulative percentages.__
+
+_`r table_nums(name = "tcap1", caption = "Add Health Wave 3 - Participants' Knowledge Confidence")`_
+```{r}
+#Frequency tables
+kqconfidence_tab <-
+  dat.age.no.aid %>% 
+    group_by(kqconfidence) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Participants' Confidence in the Knowledge") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+kqconfidence_tab
+```
+## 
+__[BONUS] For each subject there were zero to 10 â€œmissingâ€ answers to each of the 10 component questions. We would like to know what this distribution is. Include below a table that shows the count of subjects for each unique value of the count of missing questions.__
+
+## 
+__For each possible value of the Knowledge Quiz Part A sum score (from Section \@ref(scoring-across-columns)) what is the mean `kqconfidence` level? __
+```{r}
+table(dat.age.no.aid$confidence.sum)
+agg.kq.score <- aggregate(cbind(kqconfidence, num.obs)~confidence.sum,
+                  data = dat.age.no.aid, FUN="mean", na.rm=T)
+colnames(agg.kq.score) <- c("Possible Sums of Scores", "Mean Score", "N")
+kqconfidence_tab2 <-
+  agg.kq.score %>% 
+    kable(caption = "Mean KQ Score for each possible sum of scores") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+kqconfidence_tab2
+```
+
+## 
+__[BONUS] For each respondent, create two different confidence scores: a confidence score for the items answered correctly and a confidence score for the items answered incorrectly. How many respondents are more confident when answering incorrectly?__
